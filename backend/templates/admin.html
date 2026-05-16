@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Panel</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-dark text-white">
+
+    <div class="container py-5">
+
+        <div class="d-flex justify-content-between mb-4">
+
+            <h1>👑 Admin Dashboard</h1>
+
+            <a href="/logout" class="btn btn-danger">
+                Logout
+            </a>
+
+        </div>
+
+        <div class="card p-4 shadow-lg">
+
+            <h3 class="mb-4 text-dark">
+                All Rides
+            </h3>
+
+            <table class="table table-bordered">
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Driver</th>
+                        <th>Destination</th>
+                        <th>Seats</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for ride in rides %}
+
+                    <tr>
+
+                        <td>{{ ride[0] }}</td>
+                        <td>{{ ride[1] }}</td>
+                        <td>{{ ride[2] }}</td>
+                        <td>{{ ride[3] }}</td>
+                        <td>{{ ride[4] }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
