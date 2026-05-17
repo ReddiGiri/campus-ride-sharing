@@ -15,7 +15,7 @@
 
 </head>
 
-<body class="bg-dark text white">
+<body class="bg-dark text-white">
 
     <div class="container py-5">
 
@@ -23,7 +23,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
 
-            <h4 class="text-white">
+            <h4>
                 Welcome, {{ user }} 😎
             </h4>
 
@@ -53,40 +53,49 @@
 
         <div class="card p-4 shadow-lg mb-5">
 
-            <h3 class="mb-4">Post a Ride</h3>
+            <h3 class="mb-4 text-dark">
+                Post a Ride
+            </h3>
 
             <form method="POST">
 
                 <div class="row g-3">
 
                     <div class="col-md-4">
+
                         <input
                             type="text"
                             name="name"
                             class="form-control"
                             placeholder="Driver Name"
                             required>
+
                     </div>
 
                     <div class="col-md-4">
+
                         <input
                             type="text"
                             name="destination"
                             class="form-control"
                             placeholder="Destination"
                             required>
+
                     </div>
 
                     <div class="col-md-2">
+
                         <input
                             type="number"
                             name="seats"
                             class="form-control"
                             placeholder="Seats"
                             required>
+
                     </div>
 
                     <div class="col-md-2">
+
                         <button
                             type="submit"
                             class="btn btn-primary w-100">
@@ -94,6 +103,7 @@
                             Post
 
                         </button>
+
                     </div>
 
                 </div>
@@ -102,7 +112,7 @@
 
         </div>
 
-        <h2 class="text-white mb-4">
+        <h2 class="mb-4">
             Available Rides
         </h2>
 
@@ -150,30 +160,39 @@
                             {{ ride[3] }}
                         </h4>
 
-                        <p class="card-text">
+                        <p class="card-text text-dark">
+
                             Driver:
                             <strong>{{ ride[2] }}</strong>
+
                         </p>
 
                         <p class="text-muted">
-                            Posted by: {{ ride[1] }}
+
+                            Posted by:
+                            {{ ride[1] }}
+
                         </p>
 
                         <span class="badge bg-success mb-3">
+
                             {{ ride[4] }} Seats Left
+
                         </span>
 
                         <br>
 
-                        <a href="/book/{{ ride[0] }}"
-                           class="btn btn-success">
+                        <a
+                            href="/book/{{ ride[0] }}"
+                            class="btn btn-success">
 
                             Book
 
                         </a>
 
-                        <a href="/delete/{{ ride[0] }}"
-                           class="btn btn-danger">
+                        <a
+                            href="/delete/{{ ride[0] }}"
+                            class="btn btn-danger">
 
                             Delete
 
@@ -193,13 +212,13 @@
 
     <script>
 
-    function toggleMode() {
+        function toggleMode() {
 
-        document.body.classList.toggle("bg-dark");
+            document.body.classList.toggle("bg-dark");
 
-        document.body.classList.toggle("text-white");
+            document.body.classList.toggle("text-white");
 
-    }
+        }
 
     </script>
 
