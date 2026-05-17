@@ -15,7 +15,7 @@
 
 </head>
 
-<body>
+<body id="body">
 
     <div class="container py-5">
 
@@ -27,9 +27,21 @@
                 Welcome, {{ user }} 😎
             </h4>
 
-            <a href="/logout" class="btn btn-danger">
-                Logout
-            </a>
+            <div class="d-flex gap-2">
+
+                <button
+                    onclick="toggleMode()"
+                    class="btn btn-warning">
+
+                    🌙 Mode
+
+                </button>
+
+                <a href="/logout" class="btn btn-danger">
+                    Logout
+                </a>
+
+            </div>
 
         </div>
 
@@ -178,6 +190,30 @@
         </div>
 
     </div>
+
+    <script>
+
+        function toggleMode() {
+
+            let body = document.getElementById("body")
+
+            if (body.classList.contains("bg-dark")) {
+
+                body.classList.remove("bg-dark")
+                body.classList.remove("text-white")
+
+            }
+
+            else {
+
+                body.classList.add("bg-dark")
+                body.classList.add("text-white")
+
+            }
+
+        }
+
+    </script>
 
 </body>
 
