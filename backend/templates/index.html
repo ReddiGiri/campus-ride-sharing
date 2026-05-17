@@ -15,7 +15,7 @@
 
 </head>
 
-<body class="bg-dark text-white">
+<body id="body" class="bg-dark text-white">
 
     <div class="container py-5">
 
@@ -30,7 +30,7 @@
             <div class="d-flex gap-2">
 
                 <button
-                    onclick="document.body.classList.toggle('bg-dark');document.body.classList.toggle('text-white');"
+                    onclick="toggleMode()"
                     class="btn btn-warning">
 
                     🌙 Mode
@@ -209,6 +209,30 @@
         </div>
 
     </div>
+
+    <script>
+
+        function toggleMode() {
+
+            let body = document.getElementById("body");
+
+            if (body.classList.contains("bg-dark")) {
+
+                body.classList.remove("bg-dark");
+                body.classList.remove("text-white");
+
+            }
+
+            else {
+
+                body.classList.add("bg-dark");
+                body.classList.add("text-white");
+
+            }
+
+        }
+
+    </script>
 
 </body>
 
