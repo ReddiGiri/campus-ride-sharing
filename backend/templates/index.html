@@ -193,25 +193,13 @@
 
     <script>
 
-        function toggleMode() {
+    function toggleMode() {
 
-            let body = document.getElementById("body")
+        document.body.classList.toggle("bg-dark");
 
-            if (body.classList.contains("bg-dark")) {
+        document.body.classList.toggle("text-white");
 
-                body.classList.remove("bg-dark")
-                body.classList.remove("text-white")
-
-            }
-
-            else {
-
-                body.classList.add("bg-dark")
-                body.classList.add("text-white")
-
-            }
-
-        }
+    }
 
     </script>
 
