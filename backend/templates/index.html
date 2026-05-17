@@ -15,7 +15,7 @@
 
 </head>
 
-<body id="body" class="bg-dark text-white">
+<body class="bg-dark text-white">
 
     <div class="container py-5">
 
@@ -214,7 +214,9 @@
 
         function toggleMode() {
 
-            document.body.classList.toggle("light-mode");
+            const body = document.body;
+
+            body.classList.toggle("light-mode");
 
         }
 
