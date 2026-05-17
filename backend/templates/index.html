@@ -30,7 +30,7 @@
             <div class="d-flex gap-2">
 
                 <button
-                    onclick="toggleMode()"
+                    id="modeBtn"
                     class="btn btn-warning">
 
                     🌙 Mode
@@ -212,13 +212,15 @@
 
     <script>
 
-        function toggleMode() {
+        const modeBtn = document.getElementById("modeBtn");
+
+        modeBtn.addEventListener("click", function () {
 
             document.body.classList.toggle("bg-dark");
 
             document.body.classList.toggle("text-white");
 
-        }
+        });
 
     </script>
 
