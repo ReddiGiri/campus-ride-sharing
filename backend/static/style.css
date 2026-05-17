@@ -1,15 +1,30 @@
 body {
-    background: linear-gradient(to right, #141e30, #243b55);
-    font-family: Arial, sans-serif;
-    color: white;
-    padding: 30px;
+
+    transition: 0.5s;
+
 }
 
-h1 {
-    color: blue;
-    font-size: 50px;
+.light-mode {
+
+    background-color: white !important;
+
+    color: black !important;
+
 }
 
-p {
-    font-size: 25px;
+.light-mode .card {
+
+    background-color: #f8f9fa !important;
+
+    color: black !important;
+
+}
+
+.light-mode h1,
+.light-mode h2,
+.light-mode h4,
+.light-mode p {
+
+    color: black !important;
+
 }

@@ -214,21 +214,7 @@
 
         function toggleMode() {
 
-            let body = document.getElementById("body");
-
-            if (body.classList.contains("bg-dark")) {
-
-                body.classList.remove("bg-dark");
-                body.classList.remove("text-white");
-
-            }
-
-            else {
-
-                body.classList.add("bg-dark");
-                body.classList.add("text-white");
-
-            }
+            document.body.classList.toggle("light-mode");
 
         }
 
