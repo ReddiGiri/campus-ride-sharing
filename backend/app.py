@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, flash
-from flask_socketio import SocketIO, join_room, emit
+from flask_socketio import SocketIO, join_room
 import sqlite3
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "secret123"
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*") 
 
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -200,6 +200,14 @@ def profile():
         completed_rides=completed_rides,
         active_rides=active_rides
     )
+@socketio.on("join")
+def handle_join(data):
+
+    username = data["username"]
+
+    join_room(username)
+
+    print(username, "joined socket room")
 @app.route("/edit_profile", methods=["GET", "POST"])
 def edit_profile():
 
