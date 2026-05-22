@@ -1,29 +1,44 @@
 import sqlite3
 
-connection = sqlite3.connect('rides.db')
+conn = sqlite3.connect("rides.db")
+cursor = conn.cursor()
 
-cursor = connection.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    password TEXT,
+    image TEXT,
+    college_id TEXT,
+    email TEXT
+)
+""")
 
-cursor.execute('''
+cursor.execute("""
 CREATE TABLE IF NOT EXISTS rides (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT,
     name TEXT,
+    from_location TEXT,
     destination TEXT,
-    seats INTEGER
+    seats INTEGER,
+    time TEXT,
+    vehicle TEXT,
+    phone TEXT,
+    rating INTEGER DEFAULT 0,
+    completed INTEGER DEFAULT 0
 )
-''')
+""")
 
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS users (
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    password TEXT
+    ride_id INTEGER,
+    passenger TEXT
 )
-''')
+""")
 
-connection.commit()
-
-connection.close()
+conn.commit()
+conn.close()
 
 print("Database created successfully")

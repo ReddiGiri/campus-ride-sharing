@@ -28,3 +28,61 @@ body {
     color: black !important;
 
 }
+/* Mobile Responsive UI */
+@media (max-width: 768px) {
+
+    .container {
+        padding: 15px !important;
+    }
+
+    h1 {
+        font-size: 28px;
+        margin-bottom: 25px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    h4 {
+        font-size: 18px;
+    }
+
+    .card {
+        margin-bottom: 15px;
+        border-radius: 15px;
+    }
+
+    .card-body {
+        padding: 18px;
+    }
+
+    .form-control,
+    .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .row > div {
+        margin-bottom: 10px;
+    }
+
+    .d-flex {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 7px 10px;
+    }
+
+    img.rounded-circle {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    .offcanvas {
+        width: 80% !important;
+    }
+}

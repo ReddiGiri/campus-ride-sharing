@@ -1,180 +1,473 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, send_from_directory, flash
 import sqlite3
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "secret123"
 
-app.secret_key = "campusride"
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def connect_db():
+    return sqlite3.connect("rides.db")
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/uploads/<filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+
+@app.route("/", methods=["GET", "POST"])
 def home():
-    if 'user' not in session:
-        return redirect(url_for('login'))
 
-    connection = sqlite3.connect('rides.db')
-    cursor = connection.cursor()
+    if "user" not in session:
+        return redirect("/login")
 
-    if request.method == 'POST':
+    conn = connect_db()
+    cursor = conn.cursor()
 
-        name = request.form['name']
-        destination = request.form['destination']
-        seats = int(request.form['seats'])
+    if request.method == "POST":
+        username = session["user"]
+        name = request.form["name"]
+        from_location = request.form["from_location"]
+        destination = request.form["destination"]
+        seats = request.form["seats"]
+        time = request.form["time"]
+        vehicle = request.form["vehicle"]
+        phone = request.form["phone"]
 
-        cursor.execute(
-            "INSERT INTO rides (username, name, destination, seats) VALUES (?, ?, ?, ?)",
-            (session['user'], name, destination, seats)
-        )
+        cursor.execute("""
+            INSERT INTO rides
+            (username, name, from_location, destination, seats, time, vehicle, phone)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (username, name, from_location, destination, seats, time, vehicle, phone))
 
-        connection.commit()
+        conn.commit()
 
-    search = request.args.get('search')
+    search = request.args.get("search")
 
     if search:
-
-        cursor.execute(
-            "SELECT * FROM rides WHERE destination LIKE ?",
-            ('%' + search + '%',)
-        )
-
+        cursor.execute("""
+            SELECT rides.id,
+                   rides.username,
+                   rides.name,
+                   rides.from_location,
+                   rides.destination,
+                   rides.seats,
+                   rides.time,
+                   rides.vehicle,
+                   rides.phone,
+                   rides.rating,
+                   users.image,
+                   users.college_id
+            FROM rides
+            JOIN users ON rides.username = users.username
+            WHERE rides.destination LIKE ?
+            AND rides.seats > 0
+            AND rides.completed = 0
+        """, ('%' + search + '%',))
     else:
+        cursor.execute("""
+            SELECT rides.id,
+                   rides.username,
+                   rides.name,
+                   rides.from_location,
+                   rides.destination,
+                   rides.seats,
+                   rides.time,
+                   rides.vehicle,
+                   rides.phone,
+                   rides.rating,
+                   users.image
+            FROM rides
+            JOIN users ON rides.username = users.username
+            WHERE rides.seats > 0
+            AND rides.completed = 0
+        """)
 
-        cursor.execute("SELECT * FROM rides")
+    rides = cursor.fetchall()
+    conn.close()
+
+    return render_template("index.html", rides=rides, user=session["user"])
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        college_id = request.form["college_id"]
+        email = request.form["email"]
+        if college_id.strip() == "" or email.strip() == "":
+            return "College ID and College Email are required"
+        image = request.files["image"]
+        
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            conn.close()
+            return "Username already exists"
+
+        image.save(os.path.join(app.config["UPLOAD_FOLDER"], image.filename))
+        hashed_password = generate_password_hash(password)
+
+        cursor.execute("""
+            INSERT INTO users (username, password, image, college_id, email)
+            VALUES (?, ?, ?, ?, ?)
+        """, (username, hashed_password, image.filename, college_id, email))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/login")
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+        user = cursor.fetchone()
+
+        conn.close()
+
+        if user and check_password_hash(user[2], password):
+            session["user"] = username
+            session["college_id"] = user[4]
+            return redirect("/")
+        else:
+            return "Invalid username or password"
+
+    return render_template("login.html")
+
+@app.route("/profile")
+def profile():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    username = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT username, image, college_id, email FROM users WHERE username=?",
+        (username,)
+    )
+    user = cursor.fetchone()
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM rides WHERE username=?",
+        (username,)
+    )
+    total_rides = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM rides WHERE username=? AND completed=1",
+        (username,)
+    )
+    completed_rides = cursor.fetchone()[0]
+
+    active_rides = total_rides - completed_rides
+
+    conn.close()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        total_rides=total_rides,
+        completed_rides=completed_rides,
+        active_rides=active_rides
+    )
+@app.route("/edit_profile", methods=["GET", "POST"])
+def edit_profile():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    username = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+
+        email = request.form["email"]
+        college_id = request.form["college_id"]
+        image = request.files["image"]
+
+        if image and image.filename != "":
+
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], image.filename))
+
+            cursor.execute(
+                """
+                UPDATE users
+                SET email=?, college_id=?, image=?
+                WHERE username=?
+                """,
+                (email, college_id, image.filename, username)
+            )
+
+        else:
+
+            cursor.execute(
+                """
+                UPDATE users
+                SET email=?, college_id=?
+                WHERE username=?
+                """,
+                (email, college_id, username)
+            )
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/profile")
+
+    cursor.execute(
+        """
+        SELECT username, image, college_id, email
+        FROM users
+        WHERE username=?
+        """,
+        (username,)
+    )
+
+    user = cursor.fetchone()
+
+    conn.close()
+
+    return render_template("edit_profile.html", user=user)
+
+@app.route("/myrides")
+def myrides():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    username = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM rides WHERE username=?",
+        (username,)
+    )
 
     rides = cursor.fetchall()
 
-    connection.close()
+    conn.close()
 
-    return render_template(
-        'index.html',
-        rides=rides,
-        user=session.get('user')
-    )
+    return render_template("myrides.html", rides=rides)
 
 
-@app.route('/book/<int:ride_id>')
-def book_ride(ride_id):
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/login")
 
-    connection = sqlite3.connect('rides.db')
-    cursor = connection.cursor()
+
+@app.route("/book/<int:id>")
+def book(id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    passenger = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
 
     cursor.execute(
-        "UPDATE rides SET seats = seats - 1 WHERE id = ? AND seats > 0",
+        "SELECT * FROM bookings WHERE ride_id=? AND passenger=?",
+        (id, passenger)
+    )
+
+    already_booked = cursor.fetchone()
+
+    if already_booked:
+        conn.close()
+        return "You already booked this ride"
+
+    cursor.execute("SELECT seats FROM rides WHERE id=?", (id,))
+    ride = cursor.fetchone()
+
+    if ride and ride[0] > 0:
+        cursor.execute(
+            "UPDATE rides SET seats = seats - 1 WHERE id=?",
+            (id,)
+        )
+
+        cursor.execute(
+            "INSERT INTO bookings (ride_id, passenger) VALUES (?, ?)",
+            (id, passenger)
+        )
+
+        conn.commit()
+        flash("Ride booked successfully ✅")
+
+    conn.close()
+    return redirect("/")
+
+
+@app.route("/mybookings")
+def mybookings():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    passenger = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT rides.id,
+            rides.username,
+            rides.name,
+            rides.from_location,
+            rides.destination,
+            rides.seats,
+            rides.time,
+            rides.vehicle,
+            rides.phone,
+            rides.rating,
+            rides.completed
+
+        FROM bookings
+
+        JOIN rides
+        ON bookings.ride_id = rides.id
+
+        WHERE bookings.passenger=?
+    """, (passenger,))
+
+    my_rides = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("mybookings.html", my_rides=my_rides)
+
+
+@app.route("/rate/<int:id>/<int:value>")
+def rate(id, value):
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE rides SET rating=? WHERE id=?",
+        (value, id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/")
+
+
+@app.route("/delete/<int:id>")
+def delete(id):
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM rides WHERE id=? AND username=?",
+        (id, session["user"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/")
+@app.route("/cancel_booking/<int:ride_id>")
+def cancel_booking(ride_id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    passenger = session["user"]
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM bookings
+        WHERE ride_id=? AND passenger=?
+        """,
+        (ride_id, passenger)
+    )
+
+    cursor.execute(
+        """
+        UPDATE rides
+        SET seats = seats + 1
+        WHERE id=?
+        """,
         (ride_id,)
     )
 
-    connection.commit()
-    connection.close()
+    conn.commit()
+    conn.close()
 
-    return redirect('/')
+    return redirect("/mybookings")
 
+@app.route("/complete_ride/<int:ride_id>")
+def complete_ride(ride_id):
 
-@app.route('/delete/<int:ride_id>')
-def delete_ride(ride_id):
-
-    connection = sqlite3.connect('rides.db')
-    cursor = connection.cursor()
+    conn = connect_db()
+    cursor = conn.cursor()
 
     cursor.execute(
-        "DELETE FROM rides WHERE id = ? AND username = ?",
-        (ride_id, session['user'])
+        "UPDATE rides SET completed = 1 WHERE id = ?",
+        (ride_id,)
     )
 
-    connection.commit()
-    connection.close()
+    print("Updated rows:", cursor.rowcount)
 
-    return redirect('/')
+    conn.commit()
+    conn.close()
 
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-
-    if request.method == 'POST':
-
-        username = request.form['username']
-        password = request.form['password']
-
-        hashed_password = generate_password_hash(password)
-
-        connection = sqlite3.connect('rides.db')
-        cursor = connection.cursor()
-
-        cursor.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            (username, hashed_password)
-        )
-
-        connection.commit()
-        connection.close()
-
-        return redirect('/login')
-
-    return render_template('register.html')
+    return redirect("/")
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-
-    if request.method == 'POST':
-
-        username = request.form['username']
-        password = request.form['password']
-
-        connection = sqlite3.connect('rides.db')
-        cursor = connection.cursor()
-
-        cursor.execute(
-            "SELECT * FROM users WHERE username = ?",
-            (username,)
-        )
-
-        user = cursor.fetchone()
-
-        connection.close()
-
-        if user and check_password_hash(user[2], password):
-
-            session['user'] = username
-
-            if username == "admin":
-
-                session['admin'] = True
-
-            return redirect('/')
-        else:
-
-            return "Invalid Username or Password"
-
-    return render_template('login.html')
-
-@app.route('/admin')
+@app.route("/admin")
 def admin():
 
-    if 'admin' not in session:
-        return redirect('/')
+    conn = connect_db()
+    cursor = conn.cursor()
 
-    connection = sqlite3.connect('rides.db')
-    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM rides")
+    conn.close()
 
-    rides = cursor.fetchall()
-
-    connection.close()
-
-    return render_template(
-        'admin.html',
-        rides=rides
-    )
+    return render_template("admin.html", users=users)
 
 
-@app.route('/logout')
-def logout():
 
-    session.pop('user', None)
-
-    return redirect('/login')
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
