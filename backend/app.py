@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, flash
+from flask_socketio import SocketIO, join_room, emit
 import sqlite3
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+socketio = SocketIO(app)
 
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -281,6 +283,13 @@ def myrides():
 
     return render_template("myrides.html", rides=rides)
 
+@socketio.on("join")
+def handle_join(data):
+
+    username = data["username"]
+
+    join_room(username)
+
 
 @app.route("/logout")
 def logout():
@@ -322,6 +331,20 @@ def book(id):
         cursor.execute(
             "INSERT INTO bookings (ride_id, passenger) VALUES (?, ?)",
             (id, passenger)
+        )
+        cursor.execute(
+            "SELECT username FROM rides WHERE id=?",
+            (id,)
+        )
+
+        ride_owner = cursor.fetchone()[0]
+
+        socketio.emit(
+            "booking_alert",
+            {
+                "message": passenger + " booked your ride 🚗"
+            },
+            room=ride_owner
         )
 
         conn.commit()
@@ -470,4 +493,4 @@ def admin():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
