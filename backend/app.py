@@ -1,18 +1,20 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, flash
 from flask_socketio import SocketIO, join_room
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "secret123"
-socketio = SocketIO(app, cors_allowed_origins="*") 
+
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
 
 def connect_db():
     return sqlite3.connect("rides.db")
@@ -21,6 +23,13 @@ def connect_db():
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+
+@socketio.on("join")
+def handle_join(data):
+    username = data["username"]
+    join_room(username)
+    print(username, "joined socket room")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -84,7 +93,8 @@ def home():
                    rides.vehicle,
                    rides.phone,
                    rides.rating,
-                   users.image
+                   users.image,
+                   users.college_id
             FROM rides
             JOIN users ON rides.username = users.username
             WHERE rides.seats > 0
@@ -105,10 +115,10 @@ def register():
         password = request.form["password"]
         college_id = request.form["college_id"]
         email = request.form["email"]
+        image = request.files["image"]
+
         if college_id.strip() == "" or email.strip() == "":
             return "College ID and College Email are required"
-        image = request.files["image"]
-        
 
         conn = connect_db()
         cursor = conn.cursor()
@@ -121,6 +131,7 @@ def register():
             return "Username already exists"
 
         image.save(os.path.join(app.config["UPLOAD_FOLDER"], image.filename))
+
         hashed_password = generate_password_hash(password)
 
         cursor.execute("""
@@ -153,12 +164,12 @@ def login():
 
         if user and check_password_hash(user[2], password):
             session["user"] = username
-            session["college_id"] = user[4]
             return redirect("/")
         else:
             return "Invalid username or password"
 
     return render_template("login.html")
+
 
 @app.route("/profile")
 def profile():
@@ -177,16 +188,10 @@ def profile():
     )
     user = cursor.fetchone()
 
-    cursor.execute(
-        "SELECT COUNT(*) FROM rides WHERE username=?",
-        (username,)
-    )
+    cursor.execute("SELECT COUNT(*) FROM rides WHERE username=?", (username,))
     total_rides = cursor.fetchone()[0]
 
-    cursor.execute(
-        "SELECT COUNT(*) FROM rides WHERE username=? AND completed=1",
-        (username,)
-    )
+    cursor.execute("SELECT COUNT(*) FROM rides WHERE username=? AND completed=1", (username,))
     completed_rides = cursor.fetchone()[0]
 
     active_rides = total_rides - completed_rides
@@ -200,14 +205,8 @@ def profile():
         completed_rides=completed_rides,
         active_rides=active_rides
     )
-@socketio.on("join")
-def handle_join(data):
 
-    username = data["username"]
 
-    join_room(username)
-
-    print(username, "joined socket room")
 @app.route("/edit_profile", methods=["GET", "POST"])
 def edit_profile():
 
@@ -220,34 +219,25 @@ def edit_profile():
     cursor = conn.cursor()
 
     if request.method == "POST":
-
         email = request.form["email"]
         college_id = request.form["college_id"]
         image = request.files["image"]
 
         if image and image.filename != "":
-
             image.save(os.path.join(app.config["UPLOAD_FOLDER"], image.filename))
 
-            cursor.execute(
-                """
+            cursor.execute("""
                 UPDATE users
                 SET email=?, college_id=?, image=?
                 WHERE username=?
-                """,
-                (email, college_id, image.filename, username)
-            )
+            """, (email, college_id, image.filename, username))
 
         else:
-
-            cursor.execute(
-                """
+            cursor.execute("""
                 UPDATE users
                 SET email=?, college_id=?
                 WHERE username=?
-                """,
-                (email, college_id, username)
-            )
+            """, (email, college_id, username))
 
         conn.commit()
         conn.close()
@@ -255,11 +245,7 @@ def edit_profile():
         return redirect("/profile")
 
     cursor.execute(
-        """
-        SELECT username, image, college_id, email
-        FROM users
-        WHERE username=?
-        """,
+        "SELECT username, image, college_id, email FROM users WHERE username=?",
         (username,)
     )
 
@@ -268,6 +254,7 @@ def edit_profile():
     conn.close()
 
     return render_template("edit_profile.html", user=user)
+
 
 @app.route("/myrides")
 def myrides():
@@ -281,7 +268,7 @@ def myrides():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM rides WHERE username=?",
+        "SELECT * FROM rides WHERE username=? ORDER BY id DESC",
         (username,)
     )
 
@@ -291,18 +278,40 @@ def myrides():
 
     return render_template("myrides.html", rides=rides)
 
-@socketio.on("join")
-def handle_join(data):
 
-    username = data["username"]
+@app.route("/mybookings")
+def mybookings():
 
-    join_room(username)
+    if "user" not in session:
+        return redirect("/login")
 
+    passenger = session["user"]
 
-@app.route("/logout")
-def logout():
-    session.pop("user", None)
-    return redirect("/login")
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT rides.id,
+               rides.username,
+               rides.name,
+               rides.from_location,
+               rides.destination,
+               rides.seats,
+               rides.time,
+               rides.vehicle,
+               rides.phone,
+               rides.rating,
+               rides.completed
+        FROM bookings
+        JOIN rides ON bookings.ride_id = rides.id
+        WHERE bookings.passenger=?
+    """, (passenger,))
+
+    my_rides = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("mybookings.html", my_rides=my_rides)
 
 
 @app.route("/book/<int:id>")
@@ -320,50 +329,53 @@ def book(id):
         "SELECT * FROM bookings WHERE ride_id=? AND passenger=?",
         (id, passenger)
     )
-
     already_booked = cursor.fetchone()
 
     if already_booked:
         conn.close()
-        return "You already booked this ride"
+        flash("You already booked this ride")
+        return redirect("/")
 
-    cursor.execute("SELECT seats FROM rides WHERE id=?", (id,))
+    cursor.execute("SELECT username, seats FROM rides WHERE id=?", (id,))
     ride = cursor.fetchone()
 
-    if ride and ride[0] > 0:
-        cursor.execute(
-            "UPDATE rides SET seats = seats - 1 WHERE id=?",
-            (id,)
-        )
+    if ride:
+        ride_owner = ride[0]
+        seats = ride[1]
 
-        cursor.execute(
-            "INSERT INTO bookings (ride_id, passenger) VALUES (?, ?)",
-            (id, passenger)
-        )
-        cursor.execute(
-            "SELECT username FROM rides WHERE id=?",
-            (id,)
-        )
+        if passenger == ride_owner:
+            conn.close()
+            flash("You cannot book your own ride")
+            return redirect("/")
 
-        ride_owner = cursor.fetchone()[0]
+        if seats > 0:
+            cursor.execute(
+                "UPDATE rides SET seats = seats - 1 WHERE id=?",
+                (id,)
+            )
 
-        socketio.emit(
-            "booking_alert",
-            {
-                "message": passenger + " booked your ride 🚗"
-            },
-            room=ride_owner
-        )
+            cursor.execute(
+                "INSERT INTO bookings (ride_id, passenger) VALUES (?, ?)",
+                (id, passenger)
+            )
 
-        conn.commit()
-        flash("Ride booked successfully ✅")
+            conn.commit()
+
+            socketio.emit(
+                "booking_alert",
+                {"message": passenger + " booked your ride 🚗"},
+                room=ride_owner
+            )
+
+            flash("Ride booked successfully ✅")
 
     conn.close()
+
     return redirect("/")
 
 
-@app.route("/mybookings")
-def mybookings():
+@app.route("/cancel_booking/<int:ride_id>")
+def cancel_booking(ride_id):
 
     if "user" not in session:
         return redirect("/login")
@@ -373,32 +385,61 @@ def mybookings():
     conn = connect_db()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT rides.id,
-            rides.username,
-            rides.name,
-            rides.from_location,
-            rides.destination,
-            rides.seats,
-            rides.time,
-            rides.vehicle,
-            rides.phone,
-            rides.rating,
-            rides.completed
+    cursor.execute(
+        "DELETE FROM bookings WHERE ride_id=? AND passenger=?",
+        (ride_id, passenger)
+    )
 
-        FROM bookings
+    if cursor.rowcount > 0:
+        cursor.execute(
+            "UPDATE rides SET seats = seats + 1 WHERE id=?",
+            (ride_id,)
+        )
 
-        JOIN rides
-        ON bookings.ride_id = rides.id
-
-        WHERE bookings.passenger=?
-    """, (passenger,))
-
-    my_rides = cursor.fetchall()
-
+    conn.commit()
     conn.close()
 
-    return render_template("mybookings.html", my_rides=my_rides)
+    return redirect("/mybookings")
+
+
+@app.route("/complete_ride/<int:ride_id>")
+def complete_ride(ride_id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE rides SET completed=1 WHERE id=? AND username=?",
+        (ride_id, session["user"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/")
+
+
+@app.route("/delete/<int:id>")
+def delete(id):
+
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM rides WHERE id=? AND username=?",
+        (id, session["user"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/")
 
 
 @app.route("/rate/<int:id>/<int:value>")
@@ -418,71 +459,10 @@ def rate(id, value):
     return redirect("/")
 
 
-@app.route("/delete/<int:id>")
-def delete(id):
-
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "DELETE FROM rides WHERE id=? AND username=?",
-        (id, session["user"])
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/")
-@app.route("/cancel_booking/<int:ride_id>")
-def cancel_booking(ride_id):
-
-    if "user" not in session:
-        return redirect("/login")
-
-    passenger = session["user"]
-
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        DELETE FROM bookings
-        WHERE ride_id=? AND passenger=?
-        """,
-        (ride_id, passenger)
-    )
-
-    cursor.execute(
-        """
-        UPDATE rides
-        SET seats = seats + 1
-        WHERE id=?
-        """,
-        (ride_id,)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/mybookings")
-
-@app.route("/complete_ride/<int:ride_id>")
-def complete_ride(ride_id):
-
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "UPDATE rides SET completed = 1 WHERE id = ?",
-        (ride_id,)
-    )
-
-    print("Updated rows:", cursor.rowcount)
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/")
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/login")
 
 
 @app.route("/admin")
@@ -497,7 +477,6 @@ def admin():
     conn.close()
 
     return render_template("admin.html", users=users)
-
 
 
 if __name__ == "__main__":

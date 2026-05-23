@@ -1,90 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
 
-    <meta charset="UTF-8">
+<title>Register</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Register</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
 
 <body class="bg-dark">
 
-    <div class="container">
+<div class="container mt-5">
 
-        <div class="row justify-content-center mt-5">
+<div class="card p-4 mx-auto" style="max-width:600px;">
 
-            <div class="col-md-4">
+<h2 class="text-center mb-4">
+📝 Student Registration
+</h2>
 
-                <div class="card p-4 shadow-lg">
+<form method="POST"
+      enctype="multipart/form-data">
 
-                    <h2 class="text-center mb-4">
-                        Register
-                    </h2>
+<label>Username</label>
 
-                    <form method="POST" enctype="multipart/form-data">
+<input type="text"
+       name="username"
+       class="form-control mb-3"
+       required>
 
-                        <input
-                            type="text"
-                            name="username"
-                            class="form-control mb-3"
-                            placeholder="Username"
-                            required>
+<label>Password</label>
 
-                        <input
-                            type="password"
-                            name="password"
-                            class="form-control mb-3"
-                            placeholder="Password"
-                            required>
-                        <input
-                            type="text"
-                            name="college_id"
-                            class="form-control mb-3"
-                            placeholder="College ID / Roll Number"
-                            required>
-                        <input
-                            type="email"
-                            name="email"
-                            class="form-control mb-3"
-                            placeholder="College Email"
-                            required>
+<input type="password"
+       name="password"
+       class="form-control mb-3"
+       required>
 
-                        <label class="form-label fw-bold">
-                            Add Profile Photo🤳
-                        </label>
+<label>College ID</label>
 
-                        
-                        
-                        <input
-                            type="file"
-                            name="image"
-                            class="form-control mb-3"
-                            required>
+<input type="text"
+       name="college_id"
+       class="form-control mb-3"
+       required>
 
-                        <button
-                            type="submit"
-                            class="btn btn-primary w-100">
+<label>College Email</label>
 
-                            Register
+<input type="email"
+       name="email"
+       class="form-control mb-3"
+       required>
 
-                        </button>
+<label>Profile Photo</label>
 
-                    </form>
+<input type="file"
+       name="image"
+       class="form-control mb-3"
+       required>
 
-                </div>
+<button class="btn btn-success w-100">
+Register
+</button>
 
-            </div>
+</form>
 
-        </div>
+</div>
 
-    </div>
+</div>
 
 </body>
-
 </html>

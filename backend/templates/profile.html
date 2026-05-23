@@ -1,55 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>Profile</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
 </head>
 
-<body class="bg-dark text-white">
+<body class="bg-dark">
 
-<div class="container py-5">
+<div class="container mt-5">
 
-    <div class="card mx-auto shadow-lg p-4 text-center" style="max-width: 450px;">
+<div class="card p-4 mx-auto text-center"
+     style="max-width:700px;">
 
-        <img src="{{ url_for('uploaded_file', filename=user[1]) }}"
-             width="120"
-             height="120"
-             class="rounded-circle mx-auto mb-3"
-             style="object-fit:cover;">
+<img src="{{ url_for('uploaded_file', filename=user[1]) }}"
+     width="150"
+     height="150"
+     class="rounded-circle mx-auto mb-3"
+     style="object-fit:cover;">
 
-        <h2 class="text-dark">
-            {{ user[0] }}
-        </h2>
+<h1>{{ user[0] }}</h1>
 
-        <span class="badge bg-success mb-3">
-            Verified Student ✅
-        </span>
+<div class="badge bg-success fs-6 mb-3">
+Verified Student ✅
+</div>
 
-        <p class="text-dark">
-            <strong>College ID:</strong> {{ user[2] }}
-        </p>
+<h5>
+College ID:
+{{ user[2] }}
+</h5>
 
-        <p class="text-dark">
-            <strong>Email:</strong> {{ user[3] }}
-        </p>
-        <a href="/myrides" class="btn btn-success mb-2">
-            🚗 My Posted Rides
-        </a>
-        
-        <p>Total Rides: {{ total_rides }}</p>
-        <p>Completed: {{ completed_rides }}</p>
-        <p>Active: {{ active_rides }}</p>
-        <a href="/edit_profile"class="btn btn-warning w-100 mb-2">✏️ Edit Profile</a>
+<p>
+Email:
+{{ user[3] }}
+</p>
 
-        <a href="/" class="btn btn-primary">
-            Back to Home
-        </a>
+<hr>
 
-    </div>
+<div class="row text-center">
+
+<div class="col-md-4">
+<h3>{{ total_rides }}</h3>
+<p>Total Rides</p>
+</div>
+
+<div class="col-md-4">
+<h3>{{ active_rides }}</h3>
+<p>Active</p>
+</div>
+
+<div class="col-md-4">
+<h3>{{ completed_rides }}</h3>
+<p>Completed</p>
+</div>
+
+</div>
+
+<a href="/myrides"
+   class="btn btn-success mt-3">
+🚗 My Posted Rides
+</a>
+
+<a href="/edit_profile"
+   class="btn btn-warning mt-2">
+✏ Edit Profile
+</a>
+
+<a href="/"
+   class="btn btn-primary mt-2">
+Back To Home
+</a>
+
+</div>
 
 </div>
 
