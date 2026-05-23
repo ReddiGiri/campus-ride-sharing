@@ -207,10 +207,14 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-    const socket = io();
+    const socket = io({
+        transports: ["websocket", "polling"]
+    });
 
     socket.on("connect", function() {
-        console.log("Username =", "{{ user }}");
+
+        console.log("Socket connected");
+        console.log("Logged user:", "{{ user }}");
 
         socket.emit("join", {
             username: "{{ user }}"
