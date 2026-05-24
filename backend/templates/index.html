@@ -13,6 +13,11 @@
 <body class="bg-dark text-white">
 
 <div class="container py-5">
+    {% for note in notifications %}
+    <script>
+        alert("{{ note[0] }}");
+    </script>
+    {% endfor %}
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}

@@ -38,6 +38,14 @@ CREATE TABLE IF NOT EXISTS bookings (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    message TEXT
+)
+""")
+
 conn.commit()
 conn.close()
 

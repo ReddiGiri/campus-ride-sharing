@@ -102,9 +102,27 @@ def home():
         """)
 
     rides = cursor.fetchall()
+    cursor.execute(
+        "SELECT message FROM notifications WHERE username=?",
+        (session["user"],)
+    )
+
+    notifications = cursor.fetchall()
+
+    cursor.execute(
+        "DELETE FROM notifications WHERE username=?",
+        (session["user"],)
+    )
+
+    conn.commit()
     conn.close()
 
-    return render_template("index.html", rides=rides, user=session["user"])
+    return render_template(
+        "index.html",
+        rides=rides,
+        user=session["user"],
+        notifications=notifications
+    )
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -357,6 +375,13 @@ def book(id):
             cursor.execute(
                 "INSERT INTO bookings (ride_id, passenger) VALUES (?, ?)",
                 (id, passenger)
+            )
+            cursor.execute(
+                """
+                INSERT INTO notifications (username, message)
+                VALUES (?, ?)
+                """,
+                (ride_owner, passenger + " booked your ride 🚗")
             )
 
             conn.commit()
