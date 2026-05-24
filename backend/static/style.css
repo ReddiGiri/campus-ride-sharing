@@ -86,3 +86,53 @@ body {
         width: 80% !important;
     }
 }
+.hero-box {
+    background: linear-gradient(135deg, #0dcaf0, #0d6efd);
+    padding: 35px 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.hero-title {
+    color: white;
+    font-weight: 800;
+    font-size: 42px;
+}
+
+.hero-subtitle {
+    color: #f8f9fa;
+    font-size: 18px;
+    margin-top: 10px;
+}
+.card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+.card-body {
+    padding: 25px;
+}
+
+.btn {
+    border-radius: 12px;
+}
+.app-logo{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    background:#0d6efd;
+    color:white;
+    font-weight:bold;
+    font-size:28px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:auto;
+}

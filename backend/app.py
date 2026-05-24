@@ -62,39 +62,41 @@ def home():
     search = request.args.get("search")
 
     if search:
+
         cursor.execute("""
             SELECT rides.id,
-                   rides.username,
-                   rides.name,
-                   rides.from_location,
-                   rides.destination,
-                   rides.seats,
-                   rides.time,
-                   rides.vehicle,
-                   rides.phone,
-                   rides.rating,
-                   users.image,
-                   users.college_id
+                rides.username,
+                rides.name,
+                rides.from_location,
+                rides.destination,
+                rides.seats,
+                rides.time,
+                rides.vehicle,
+                rides.phone,
+                rides.rating,
+                users.image,
+                users.college_id
             FROM rides
             JOIN users ON rides.username = users.username
-            WHERE rides.destination LIKE ?
+            WHERE LOWER(rides.destination) LIKE LOWER(?)
             AND rides.seats > 0
             AND rides.completed = 0
         """, ('%' + search + '%',))
+
     else:
         cursor.execute("""
             SELECT rides.id,
-                   rides.username,
-                   rides.name,
-                   rides.from_location,
-                   rides.destination,
-                   rides.seats,
-                   rides.time,
-                   rides.vehicle,
-                   rides.phone,
-                   rides.rating,
-                   users.image,
-                   users.college_id
+                rides.username,
+                rides.name,
+                rides.from_location,
+                rides.destination,
+                rides.seats,
+                rides.time,
+                rides.vehicle,
+                rides.phone,
+                rides.rating,
+                users.image,
+                users.college_id
             FROM rides
             JOIN users ON rides.username = users.username
             WHERE rides.seats > 0
@@ -109,12 +111,7 @@ def home():
 
     notifications = cursor.fetchall()
 
-    cursor.execute(
-        "DELETE FROM notifications WHERE username=?",
-        (session["user"],)
-    )
-
-    conn.commit()
+    
     conn.close()
 
     return render_template(
