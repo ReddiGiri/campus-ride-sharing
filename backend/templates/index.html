@@ -279,7 +279,7 @@
         </button>
     </div>
 
-    <div class="offcanvas-body">
+    <div class="offcanvas-body" id="notificationList"></div>
 
         {% if notifications %}
 
@@ -321,6 +321,29 @@ setInterval(function() {
 
             document.getElementById("notificationCount").innerHTML =
                 "🔔 " + data.count;
+
+            let list = document.getElementById("notificationList");
+
+            if (data.count > 0) {
+
+                list.innerHTML = "";
+
+                data.messages.forEach(function(message) {
+
+                    list.innerHTML += `
+                        <div class="alert alert-info">
+                            ${message}
+                        </div>
+                    `;
+
+                });
+
+            } else {
+
+                list.innerHTML =
+                    "<p>No notifications yet.</p>";
+
+            }
 
         });
 
