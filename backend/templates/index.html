@@ -160,6 +160,11 @@
 
                     <p class="text-dark">📍 From: {{ ride[3] }}</p>
                     <p class="text-dark">🎯 To: {{ ride[4] }}</p>
+                    <a href="https://www.google.com/maps/dir/{{ ride[3] }}/{{ ride[4] }}"
+                        target="_blank"
+                        class="btn btn-outline-success btn-sm mb-2">
+                        📍 View Route
+                    </a>
                     <p class="text-dark">⏰ Time: {{ ride[6] }}</p>
                     <p class="text-dark">🚗 Vehicle: {{ ride[7] }}</p>
                     <p class="text-dark fw-bold">📱 Contact: {{ ride[8] }}</p>
