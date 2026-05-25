@@ -330,6 +330,29 @@ def mybookings():
 
     return render_template("mybookings.html", my_rides=my_rides)
 
+@app.route("/get_notifications")
+def get_notifications():
+
+    if "user" not in session:
+        return {"count": 0, "messages": []}
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT message FROM notifications WHERE username=?",
+        (session["user"],)
+    )
+
+    notes = cursor.fetchall()
+
+    conn.close()
+
+    return {
+        "count": len(notes),
+        "messages": [note[0] for note in notes]
+    }
+
 
 @app.route("/book/<int:id>")
 def book(id):
