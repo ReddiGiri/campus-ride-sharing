@@ -58,6 +58,8 @@ def home():
         """, (username, name, from_location, destination, seats, time, vehicle, phone))
 
         conn.commit()
+        conn.close()
+        return redirect("/")
 
     search = request.args.get("search")
 
