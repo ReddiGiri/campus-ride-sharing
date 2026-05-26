@@ -51,12 +51,20 @@
        class="form-control mb-3"
        required>
 
-<label>Profile Photo</label>
+<label for="profilePhoto" class="btn btn-outline-primary w-100 mb-2">
+    📸 Upload Profile Photo
+</label>
 
-<input type="file"
-       name="image"
-       class="form-control mb-3"
-       required>
+<input
+    type="file"
+    id="profilePhoto"
+    name="image"
+    class="d-none"
+    required>
+
+<p class="text-muted text-center">
+    Profile photo required
+</p>
 
 <button class="btn btn-success w-100">
 Register
